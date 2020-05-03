@@ -1,10 +1,10 @@
-import pandas as pd
-import numpy 
+import datetime
+import calendar
 import random
-import calendar 
-import datetime 
+import numpy
+import pandas as pd
+import uuid
 
-# dictionary with product and price 
 products = {
     'Milk Bread (Slice)': [1.25, 12],
     'Milk Bread (Loaf)': [4.50, 7],
@@ -148,27 +148,24 @@ sweets = {
     'Macaroon (Pistachio)': [3.00, 15],
 }
 
-product_list = [product for product in products]
-weights = [products[product][1] for product in products]
-
-columns = ['Reciept ID', 'Product', 'Quantity Ordered', 'Price Each', 'Date']
-order_id = 11000
-
-df = pd.DataFrame(columns=columns)
+columns = ['Order ID', 'Product', 'Quantity Ordered', 'Price Each', 'Order Date']
 
 def generate_random_time(month):
   day = generate_random_day(month)
   if random.random() < 0.5:
-    date = datetime.datetime(2019, month, day,7,00)
+    date = datetime.datetime(2020, month, day,7,00)
   else:
-    date = datetime.datetime(2019, month, day,11,00)
+    date = datetime.datetime(2020, month, day,11,00)
   time_offset = numpy.random.normal(loc=0.0, scale=120)
   final_date = date + datetime.timedelta(minutes=time_offset)
   return final_date.strftime("%m/%d/%y %H:%M")
 
 def generate_random_day(month):
-  day_range = calendar.monthrange(2019,month)[1]
+  day_range = calendar.monthrange(2020,month)[1]
   return random.randint(1,day_range)
+
+def create_data_csv():
+  pass
 
 def write_row(order_number, product, order_date):
   product_price = products[product][0]
@@ -176,36 +173,42 @@ def write_row(order_number, product, order_date):
   output = [order_number, product, quantity, product_price, order_date]
   return output
 
-for month_value in range(1, 13):
-    df = pd.DataFrame(columns=columns)
-
-    if month_value == 12:
+if __name__ == '__main__':
+  order_number = 11000
+  for month in range(1,13):
+    if month == 12:
         orders_amount = int(numpy.random.normal(loc=14000, scale=3000)) 
 
-    elif month_value in range(7,9):
+    elif month in range(7,9):
         orders_amount = int(numpy.random.normal(loc=20000, scale=3000)) 
 
-    elif month_value in range(1,4):
+    elif month in range(1,4):
         orders_amount = int(numpy.random.normal(loc=9000, scale=3000)) 
     
     else: 
         orders_amount = int(numpy.random.normal(loc=12000, scale=4000)) 
 
-    for i in range(orders_amount):
-        date = generate_random_time(month_value)
+    product_list = [product for product in products]
+    weights = [products[product][1] for product in products]
 
-        product = random.choices(product_list, weights=weights)[0]
-        price = products[product][0]
-        quantity_ordered = numpy.random.geometric(p=1.0-(1.0/price), size=1)[0]
-        df.loc[i] = [order_id, product, quantity_ordered, price, date]
+    df = pd.DataFrame(columns=columns)
 
-        if product in sweets.keys():
-            if random.random() <  0.30:
-                df.loc[i] =  write_row(order_id, random.choice(list(drinks)), date)
+    i = 0
+    while orders_amount > 0:
+      order_date = generate_random_time(month)
 
-        order_id += 1
+      product_choice = random.choices(product_list, weights)[0]
+      df.loc[i] = write_row(order_number, product_choice, order_date)
+      i += 1
+      
+      if product_choice in sweets.keys():
+          if random.random() <  0.30:
+              df.loc[i] =  write_row(order_number, random.choice(list(drinks)), order_date)
+              i += 1
 
-    month_name = calendar.month_name[month_value]
-    df.to_csv(f"{month_name}_data.csv")
-    break
+      order_number += 1
+      orders_amount -= 1
 
+    month_name = calendar.month_name[month]
+    df.to_csv(f"Sales_{month_name}_2020.csv", index=False)
+    print(f"{month_name} Complete")
